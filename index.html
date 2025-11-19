@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sound Topographies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #05070b;
+      --panel-bg: #0b1118ee;
+      --panel-border: #1f2933;
+      --accent: #eab308;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #101623 0, #05070b 55%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        Segoe UI, Roboto, sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    /* --- Collapsible control shell --- */
+    .control-shell {
+      position: fixed;
+      top: 14px;
+      left: 16px;
+      z-index: 10;
+      color: var(--text);
+      max-width: 340px;
+      font-size: 13px;
+    }
+
+    .control-shell > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #0b1118dd;
+      border: 1px solid #1f2933;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(12px);
+    }
+
+    .control-shell[open] > summary {
+      border-radius: 999px 999px 10px 10px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .control-shell summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .summary-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(234, 179, 8, 0.9);
+    }
+
+    .summary-label {
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .summary-hint {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* --- Panel body --- */
+    .panel {
+      margin-top: 6px;
+      padding: 10px 12px 10px;
+      background: var(--panel-bg);
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(14px);
+
+      /* 🔥 NEW — make panel scrollable */
+      max-height: 70vh;       /* panel never exceeds 70% of screen height */
+      overflow-y: auto;       /* scroll inside the panel */
+      overscroll-behavior: contain; /* prevent whole page scroll interference */
+      scrollbar-width: thin;  /* firefox thin scrollbar */
+    }
+
+    .panel::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 6px;
+    }
+
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .section-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin: 4px 0;
+    }
+
+    .row label {
+      font-size: 12px;
+      color: #e5e7eb;
+      flex: 1;
+    }
+
+    .row small {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      flex: 2.1;
+      accent-color: var(--accent);
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+      transform: translateY(1px);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, transform 0.08s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #eab308, #f97316);
+      color: #020617;
+      border: none;
+      box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+      font-weight: 500;
+    }
+
+    button:hover {
+      transform: translateY(-0.5px);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .hintline {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .control-shell {
+        left: 8px;
+        top: 8px;
+        max-width: 92vw;
+      }
+      .panel {
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 🔽 Collapsible control panel: close before screenshot to get a clean render -->
+  <details class="control-shell" open>
+    <summary>
+      <span class="summary-dot"></span>
+      <span class="summary-label">Sound Topographies</span>
+      <span class="summary-hint">Controls</span>
+    </summary>
+
+    <div class="panel">
+      <!-- Terrain & View -->
+      <div class="panel-section">
+        <div class="section-title">Terrain & View</div>
+        <div class="section-sub">Reseed the mountains or reset the camera framing.</div>
+        <div class="btn-row">
+          <button id="regenerateBtn" class="primary">
+            ⛰️ Regenerate Shape
+          </button>
+          <button id="newSeed">
+            🎲 New Random Seed
+          </button>
+          <button id="resetView">
+            🎥 Reset View
+          </button>
+        </div>
+      </div>
+
+      <!-- Language Blend -->
+      <div class="panel-section">
+        <div class="section-title">Language Blend</div>
+        <div class="section-sub">
+          Slide between Limboo (left) and Bhutia (right) and control how strongly
+          the phoneme statistics reshape the terrain.
+        </div>
+
+        <div class="row">
+          <label for="timeDrift">
+            Time Drift / Language Blend
+            <br /><small>0 = Limboo • 1 = Bhutia</small>
+          </label>
+          <input
+            id="timeDrift"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0"
+          />
+        </div>
+
+        <div class="row">
+          <label for="dataInfluence">
+            Data Influence
+            <br /><small>How much the language pushes peaks & valleys</small>
+          </label>
+          <input
+            id="dataInfluence"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.5"
+          />
+        </div>
+      </div>
+
+      <!-- Phoneme Classes -->
+      <div class="panel-section">
+        <div class="section-title">Phoneme classes</div>
+        <div class="section-sub">
+          Emphasise different phoneme families; vowels &amp; nasals tend to lift
+          terrain, sibilants &amp; stops carve erosion.
+        </div>
+
+        <div class="row">
+          <label for="wVowels">
+            Vowels
+            <br /><small>Open peaks / resonance</small>
+          </label>
+          <input
+            id="wVowels"
+            type="range"
+            min="0"
+            max="2"
+            step="0.05"
+            value="1"
+          />
+        </div>
+
+        <div class="row">
+          <label for="wNasals">
+            Nasals
+            <br /><small>Soft ridges / shoulders</small>
+          </label>
+          <input
+            id="wNasals"
+            type="range"
+            min="0"
+            max="2"
+            step="0.05"
+            value="1"
+          />
+        </div>
+
+        <div class="row">
+          <label for="wSibs">
+            Sibilants
+            <br /><small>Carved gullies / erosion</small>
+          </label>
+          <input
+            id="wSibs"
+            type="range"
+            min="0"
+            max="2"
+            step="0.05"
+            value="1"
+          />
+        </div>
+
+        <div class="row">
+          <label for="wStops">
+            Stops
+            <br /><small>Sharper cliffs / breaks</small>
+          </label>
+          <input
+            id="wStops"
+            type="range"
+            min="0"
+            max="2"
+            step="0.05"
+            value="1"
+          />
+        </div>
+      </div>
+
+      <!-- Regional Drift -->
+      <div class="panel-section">
+        <div class="section-title">Regional Drift</div>
+        <div class="section-sub">
+          Let the model pull toward different anchor cities along the Silk Road.
+        </div>
+
+        <div class="row">
+          <label for="regionalize">
+            Enable regional drift
+            <br /><small>Blend toward nearby city anchors</small>
+          </label>
+          <input id="regionalize" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label for="regionalAlpha">
+            Regional mix strength
+            <br /><small>0 = global only • 1 = fully regional</small>
+          </label>
+          <input
+            id="regionalAlpha"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.6"
+          />
+        </div>
+      </div>
+
+      <!-- Visual Layers -->
+      <div class="panel-section">
+        <div class="section-title">Visual layers</div>
+
+        <div class="row">
+          <label for="transitionHeat">
+            Transition heatmap
+            <br /><small>Highlight ridges most sensitive to language drift</small>
+          </label>
+          <input id="transitionHeat" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label for="toggleLabels">
+            City labels
+            <br /><small>Hide text for cleaner stills</small>
+          </label>
+          <input id="toggleLabels" type="checkbox" checked />
+        </div>
+
+        <div class="row">
+          <label for="toggleRibbons">
+            Silk Route ribbons
+            <br /><small>Show / hide connection paths</small>
+          </label>
+          <input id="toggleRibbons" type="checkbox" checked />
+        </div>
+      </div>
+
+      <!-- Capture -->
+      <div class="panel-section">
+        <div class="section-title">Capture</div>
+        <div class="btn-row">
+          <button id="recordBtn">
+            ⏺️ Record 20s Clip
+          </button>
+        </div>
+        <div class="hintline">
+          Press <strong>S</strong> anytime to save a PNG snapshot of the current frame.
+          Collapse this panel first for a clean portfolio shot.
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- Three.js app -->
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
